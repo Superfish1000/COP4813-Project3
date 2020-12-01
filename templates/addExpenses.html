@@ -8,8 +8,20 @@
     <div class="flex-container w-container">
       <div>
         <form method="post">
-        {{ form.csrf_token() }}
-            <p>TO BE COMPLETED</p>
+            {{ form.csrf_token() }}
+            <p>Description:</br>
+            {{ form.description }}
+            </p>
+            <p>Category:</br>
+            {{ form.category }}
+            </p>
+            <p>Cost:</br>
+            {{ form.cost }}
+            </p>
+            <p>Date:</br>
+            {{ form.date }}
+            </p>
+
         <input value="Submit" class="button-8 w-button" type="submit">
     </form>
       </div>

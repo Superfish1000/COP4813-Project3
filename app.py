@@ -1,45 +1,75 @@
-from flask import Flask, render_template, request, url_for
+from flask import Flask, render_template, request
 from flask_pymongo import PyMongo
 from flask_wtf import FlaskForm
-from wtforms import StringField, DecimalField, SelectField, DateField
+import hashlib
+
+from wtforms import StringField, SelectField, IntegerField, DateField
+
+from Project3_Flask import main_functions
 
 app = Flask(__name__)
-app.config["SECRET_KEY"]="include_a_strong_secret_key"
-app.config["MONGO_URI"] = "add_your_connection_string_from_mongodb_cloud"
+app.config["SECRET_KEY"] = hashlib.sha256(b"include_a_strong_secret_key").hexdigest()  # mission accomplished?
+app.config[
+    "MONGO_URI"] = "mongodb+srv://some_dinkus:thisisatestpassword@cluster0.c4yii.mongodb.net/COP4813?retryWrites=true&w=majority"
+app.config["MONGO_DBNAME"] = "COP4813"
 mongo = PyMongo(app)
+mongo_database = mongo.db
+mongo_collection = mongo.db["expenses"]
+
 
 class Expenses(FlaskForm):
-    pass
-    # TO BE COMPLETED (please delete the word pass above)
+    expense_category = main_functions.read_from_file("JSON_Files/expense_category.json")
+
+    description = StringField("Description")
+    category = SelectField("Category", choices=expense_category)
+    cost = IntegerField("Cost")
+    date = DateField("Date", format='%m/%d/%Y')
+
 
 def get_total_expenses(category):
-    pass
-    # TO BE COMPLETED (please delete the word pass above)
+    expenses = mongo_collection.find({'category': int(category)})
+    total = 0
+    for expense in expenses:
+        total += expense["cost"]
+    return total
 
 
 @app.route('/')
 def index():
-    my_expenses = mongo.db.expenses.find()
-    total_cost=0
+    my_expenses = mongo_collection.find()
+    total_cost = 0
     for i in my_expenses:
-        total_cost+=float(i["cost"])
-    expensesByCategory = [
-        ("example" , get_total_expenses("example"))]
-    # expensesByCategory is a list of tuples
-    # each tuple has two elements:
-    ## a string containing the category label, for example, insurance
-    ## the total cost of this category
+        total_cost += float(i["cost"])
+    # print(total_cost)
+
+    categories = main_functions.read_from_file("JSON_Files/expense_category.json")
+
+    expensesByCategory = []
+    for category in categories:
+        category_id = category[0]
+        name = category[1]
+        expensesByCategory.append((name, get_total_expenses(category_id)))
+    # print(expensesByCategory)
+
     return render_template("index.html", expenses=total_cost, expensesByCategory=expensesByCategory)
 
 
-@app.route('/addExpenses',methods=["GET","POST"])
+@app.route('/addExpenses', methods=["GET", "POST"])
 def addExpenses():
-    # INCLUDE THE FORM
+    expensesForm = Expenses(request.form)
+
     if request.method == "POST":
-        # INSERT ONE DOCUMENT TO THE DATABASE
-        # CONTAINING THE DATA LOGGED BY THE USER
-        # REMEMBER THAT IT SHOULD BE A PYTHON DICTIONARY
+        description = request.form["description"]
+        category = int(request.form["category"])
+        cost = float(request.form["cost"])
+        date = request.form["date"]
+
+        expense = {'description': description, 'category': category, 'cost': cost, 'date': date}
+        # ADD TO DB
+        mongo_collection.insert_one(expense)
+
         return render_template("expenseAdded.html")
-    return render_template("addExpenses.html",form=expensesForm)
+    return render_template("addExpenses.html", form=expensesForm)
+
 
 app.run()

@@ -13,10 +13,13 @@
     <div class="flex-container w-container">
       <div>
         <h2>Track your expenses</h2>
-        <p>TO BE COMPLETED</p>
+        <h4>So far your total expenses are: ${{ expenses }}</h4>
 
         <h2>By category</h2>
-        <p>TO BE COMPLETED</p>
+        {% for expense in expensesByCategory %}
+          <h4>{{ expense[0] }}: ${{ expense[1] }}</h4>
+        {% endfor %}
+
       </div>
     </div>
   </section>
