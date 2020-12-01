@@ -26,6 +26,7 @@ class Expenses(FlaskForm):
     date = DateField("Date", format='%m/%d/%Y')
 
 
+# Returns an expense total for a provided category
 def get_total_expenses(category):
     expenses = mongo_collection.find({'category': int(category)})
     total = 0
@@ -42,6 +43,7 @@ def index():
         total_cost += float(i["cost"])
     # print(total_cost)
 
+    # Reads category data from a JSON file to allow for easy modification
     categories = main_functions.read_from_file("JSON_Files/expense_category.json")
 
     expensesByCategory = []
